@@ -1,0 +1,68 @@
+package exercise6;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.HashMap;
+import java.util.Map;
+
+public class TranslationServer {
+    private static final int PORT = 4228;
+    private static final Map<String, Map<String, String>> translations = new HashMap<>();
+
+    static {
+        // Initialize the translation table
+        Map<String, String> englishTranslations = new HashMap<>();
+        englishTranslations.put("Good morning", "Selamat pagi");
+        englishTranslations.put("Good night", "Selamat malam");
+        englishTranslations.put("How are you?", "Apa khabar?");
+        englishTranslations.put("Thank you", "Terima kasih");
+        englishTranslations.put("Goodbye", "Selamat tinggal");
+        englishTranslations.put("What’s up?", "Ada apa?");
+        translations.put("English", englishTranslations);
+
+        // Add more translations for other languages
+    }
+
+    public static void main(String[] args) {
+        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
+            System.out.println("Server started. Listening on port " + PORT);
+
+            while (true) {
+                try {
+                    Socket clientSocket = serverSocket.accept();
+                    System.out.println("Client connected: " + clientSocket.getInetAddress().getHostAddress());
+
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                    PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);
+
+                    String text = reader.readLine();
+                    String targetLanguage = reader.readLine();
+
+                    String translatedText = translateText(text, targetLanguage);
+                    writer.println(translatedText);
+
+                    reader.close();
+                    writer.close();
+                    clientSocket.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static String translateText(String text, String targetLanguage) {
+        Map<String, String> languageTranslations = translations.get(targetLanguage);
+        if (languageTranslations != null && languageTranslations.containsKey(text)) {
+            return languageTranslations.get(text);
+        } else {
+            return "Translation not available";
+        }
+    }
+}

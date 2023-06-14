@@ -1,0 +1,89 @@
+package exercise6;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.HashMap;
+import java.util.Map;
+
+public class TranslationServer {
+    private static final int PORT = 4228;
+    private static final Map<String, Map<String, String>> translations = new HashMap<>();
+
+    static {
+    	// Initialize the translation table
+        Map<String, Map<String, String>> translations = new HashMap<>();
+
+        // English to Bahasa Malaysia translations
+        Map<String, String> bahasaMalaysiaTranslations = new HashMap<>();
+        bahasaMalaysiaTranslations.put("Good morning", "Selamat pagi");
+        bahasaMalaysiaTranslations.put("Good night", "Selamat malam");
+        bahasaMalaysiaTranslations.put("How are you?", "Apa khabar?");
+        bahasaMalaysiaTranslations.put("Thank you", "Terima kasih");
+        bahasaMalaysiaTranslations.put("Goodbye", "Selamat tinggal");
+        bahasaMalaysiaTranslations.put("What’s up?", "Ada apa?");
+        translations.put("English", bahasaMalaysiaTranslations);
+
+        // English to Arabic translations
+        Map<String, String> arabicTranslations = new HashMap<>();
+        arabicTranslations.put("Good morning", "الخير صباح");
+        arabicTranslations.put("Good night", "مساؤك طاب");
+        arabicTranslations.put("How are you?", "حالك؟ كيف");
+        arabicTranslations.put("Thank you", "لك شكرا");
+        arabicTranslations.put("Goodbye", "السالمة مع");
+        arabicTranslations.put("What’s up?", "أخبارك؟ ما");
+        translations.put("English", arabicTranslations);
+
+        // English to Korean translations
+        Map<String, String> koreanTranslations = new HashMap<>();
+        koreanTranslations.put("Good morning", "좋은 아침");
+        koreanTranslations.put("Good night", "안녕히 주무세요");
+        koreanTranslations.put("How are you?", "어떻게 지내세요?");
+        koreanTranslations.put("Thank you", "감사합니다");
+        koreanTranslations.put("Goodbye", "안녕");
+        koreanTranslations.put("What’s up?", "뭐야?");
+        translations.put("English", koreanTranslations);
+    }
+
+    public static void main(String[] args) {
+        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
+            System.out.println("Server started. Listening on port " + PORT);
+
+            while (true) {
+                try {
+                    Socket clientSocket = serverSocket.accept();
+                    System.out.println("Client connected: " + clientSocket.getInetAddress().getHostAddress());
+
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                    PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);
+
+                    String text = reader.readLine();
+                    String targetLanguage = reader.readLine();
+
+                    String translatedText = translateText(text, targetLanguage);
+                    writer.println(translatedText);
+
+                    reader.close();
+                    writer.close();
+                    clientSocket.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static String translateText(String text, String targetLanguage) {
+        Map<String, String> languageTranslations = translations.get(targetLanguage);
+        if (languageTranslations != null && languageTranslations.containsKey(text)) {
+            return languageTranslations.get(text);
+        } else {
+            return "Translation not available";
+        }
+    }
+}

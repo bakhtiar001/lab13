@@ -1,0 +1,98 @@
+package exercise3;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
+
+public class Client {
+    private static JFrame frame;
+    private static JTextField textField;
+    private static JTextArea textArea;
+    private static JButton sendButton;
+
+    private static Socket socket;
+    private static PrintWriter writer;
+    private static BufferedReader reader;
+
+    public static void main(String[] args) {
+        frame = new JFrame("Client");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(400, 300);
+        frame.setLayout(new BorderLayout());
+
+        textField = new JTextField();
+        textArea = new JTextArea();
+        sendButton = new JButton("Send");
+
+        JPanel panel = new JPanel();
+        panel.setLayout(new BorderLayout());
+        panel.add(textField, BorderLayout.CENTER);
+        panel.add(sendButton, BorderLayout.EAST);
+
+        frame.add(new JScrollPane(textArea), BorderLayout.CENTER);
+        frame.add(panel, BorderLayout.SOUTH);
+
+        sendButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                sendMessage();
+            }
+        });
+
+        frame.setVisible(true);
+
+        connectToServer();
+    }
+
+    private static void connectToServer() {
+        try {
+            socket = new Socket("localhost", 1234);
+            writer = new PrintWriter(socket.getOutputStream(), true);
+            reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            appendToTextArea("Connected to server.");
+
+            receiveMessage();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void sendMessage() {
+        String message = textField.getText();
+        writer.println(message);
+        textField.setText("");
+    }
+
+    private static void receiveMessage() {
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    while (true) {
+                        String message = reader.readLine();
+                        appendToTextArea("Server: " + message);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        thread.start();
+    }
+
+    private static void appendToTextArea(String message) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                textArea.append(message + "\n");
+            }
+        });
+    }
+}
+

@@ -1,0 +1,106 @@
+package exercise3;
+
+import javax.swing.*;
+import java.awt.*;
+import java.io.*;
+import java.net.ServerSocket;
+import java.net.Socket;
+
+public class Server {
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                new ServerFrame();
+            }
+        });
+    }
+}
+
+class ServerFrame extends JFrame {
+
+    private JTextArea textArea;
+
+    private ServerSocket serverSocket;
+    private Socket clientSocket;
+    private PrintWriter writer;
+    private BufferedReader reader;
+
+    public ServerFrame() {
+        setTitle("Server");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(400, 300);
+        setLayout(new BorderLayout());
+
+        textArea = new JTextArea();
+        textArea.setEditable(false);
+
+        add(new JScrollPane(textArea), BorderLayout.CENTER);
+
+        setVisible(true);
+
+        startServer();
+    }
+
+    private void startServer() {
+        try {
+            serverSocket = new ServerSocket(1234);
+            appendToTextArea("Server started. Listening on port 1234.");
+
+            clientSocket = serverSocket.accept();
+            appendToTextArea("Client connected: " + clientSocket.getInetAddress().getHostAddress());
+
+            writer = new PrintWriter(clientSocket.getOutputStream(), true);
+            reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+
+            receiveMessage();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void receiveMessage() {
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    while (true) {
+                        String message = reader.readLine();
+                        appendToTextArea("Client: " + message);
+                        processMessage(message);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        thread.start();
+    }
+
+    private void processMessage(String message) {
+        // Add your logic to process the message here
+        // For example, count the number of words in the message
+        int wordCount = countWords(message);
+        sendMessage(Integer.toString(wordCount));
+    }
+
+    private int countWords(String message) {
+        // Implement your word count logic here
+        // You can use String.split() or other methods to count the words
+        // Return the word count
+        return 0;
+    }
+
+    private void sendMessage(String message) {
+        writer.println(message);
+    }
+
+    private void appendToTextArea(String message) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                textArea.append(message + "\n");
+            }
+        });
+    }
+}

@@ -1,0 +1,7 @@
+INDEX VERSION 1.132+C:\Users\User\eclipse-workspace\bitp3123-ws1\.metadata\.plugins\org.eclipse.jdt.core
+1102219196.index
+693436650.index
+1865797976.index
+809015572.index
+3755348511.index
+2948392592.index
